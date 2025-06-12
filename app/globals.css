@@ -1,0 +1,136 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* CollabraChain Design System - Professional fintech-inspired color palette */
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 215 25% 27%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 215 25% 27%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 25% 27%;
+
+    /* Deep trustworthy blue as primary */
+    --primary: 215 84% 15%;
+    --primary-foreground: 0 0% 98%;
+
+    /* Light blue for secondary elements */
+    --secondary: 215 20% 96%;
+    --secondary-foreground: 215 25% 27%;
+
+    --muted: 220 14% 96%;
+    --muted-foreground: 215 16% 47%;
+
+    /* Vibrant green for success and CTAs */
+    --accent: 142 76% 36%;
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 215 84% 15%;
+
+    --radius: 0.75rem;
+
+    /* CollabraChain specific colors */
+    --trust-blue: 215 84% 15%;
+    --trust-blue-light: 215 84% 25%;
+    --energy-green: 142 76% 36%;
+    --energy-green-light: 142 76% 46%;
+    --neutral-50: 220 14% 98%;
+    --neutral-100: 220 14% 96%;
+    --neutral-200: 220 13% 91%;
+    --neutral-600: 215 16% 47%;
+    --neutral-800: 215 25% 27%;
+  }
+
+  .dark {
+    --background: 215 28% 8%;
+    --foreground: 0 0% 95%;
+
+    --card: 215 28% 10%;
+    --card-foreground: 0 0% 95%;
+
+    --popover: 215 28% 10%;
+    --popover-foreground: 0 0% 95%;
+
+    --primary: 215 84% 25%;
+    --primary-foreground: 0 0% 95%;
+
+    --secondary: 215 28% 15%;
+    --secondary-foreground: 0 0% 95%;
+
+    --muted: 215 28% 15%;
+    --muted-foreground: 215 20% 65%;
+
+    --accent: 142 76% 46%;
+    --accent-foreground: 0 0% 95%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 95%;
+
+    --border: 215 28% 18%;
+    --input: 215 28% 18%;
+    --ring: 215 84% 25%;
+
+    --trust-blue: 215 84% 25%;
+    --trust-blue-light: 215 84% 35%;
+    --energy-green: 142 76% 46%;
+    --energy-green-light: 142 76% 56%;
+    --neutral-50: 215 28% 15%;
+    --neutral-100: 215 28% 18%;
+    --neutral-200: 215 28% 22%;
+    --neutral-600: 215 20% 65%;
+    --neutral-800: 0 0% 95%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold tracking-tight;
+  }
+
+  h1 { @apply text-3xl lg:text-4xl; }
+  h2 { @apply text-2xl lg:text-3xl; }
+  h3 { @apply text-xl lg:text-2xl; }
+  h4 { @apply text-lg lg:text-xl; }
+}
+
+@layer utilities {
+  .trust-blue {
+    @apply text-[hsl(var(--trust-blue))];
+  }
+  
+  .bg-trust-blue {
+    @apply bg-[hsl(var(--trust-blue))];
+  }
+  
+  .energy-green {
+    @apply text-[hsl(var(--energy-green))];
+  }
+  
+  .bg-energy-green {
+    @apply bg-[hsl(var(--energy-green))];
+  }
+
+  .gradient-brand {
+    background: linear-gradient(135deg, hsl(var(--trust-blue)) 0%, hsl(var(--energy-green)) 100%);
+  }
+}
