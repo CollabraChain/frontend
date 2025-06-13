@@ -2,13 +2,24 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { MessageSquare, Menu, X } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAccount } from "wagmi";
 import { Wallet } from "@coinbase/onchainkit/wallet";
 
 export const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  useEffect(() => {
+    // Function to check screen size
+    const checkScreenSize = () => {
+      setIsDesktop(window.innerWidth >= 768);
+    };
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
 
   const {
     isConnected,
@@ -30,18 +41,20 @@ export const Header = () => {
             </Badge>
           </div>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
-            <Link href="/#features" className="text-neutral-600 hover:text-trust-blue transition-colors">
-              Features
-            </Link>
-            <Link href="/how-it-works" className="text-neutral-600 hover:text-trust-blue transition-colors">
-              How it Works
-            </Link>
-            <a href="https://collabrachain.gitbook.io/docs/" target="_blank" rel="noopener noreferrer" className="text-neutral-600 hover:text-trust-blue transition-colors">
-              Docs
-            </a>
-          </nav>
+          {/* Desktop Navigation (JS-based) */}
+          {isDesktop && (
+            <nav className="flex items-center space-x-8">
+              <Link href="/#features" className="text-neutral-600 hover:text-trust-blue transition-colors">
+                Features
+              </Link>
+              <Link href="/how-it-works" className="text-neutral-600 hover:text-trust-blue transition-colors">
+                How it Works
+              </Link>
+              <a href="https://collabrachain.gitbook.io/docs/" target="_blank" rel="noopener noreferrer" className="text-neutral-600 hover:text-trust-blue transition-colors">
+                Docs
+              </a>
+            </nav>
+          )}
 
           <div className="flex items-center space-x-4">
             {isConnected ? (
@@ -52,21 +65,22 @@ export const Header = () => {
               </Button>
             )}
 
-            {/* Mobile menu button */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            >
-              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </Button>
+            {/* Mobile menu button (JS-based) */}
+            {!isDesktop && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              >
+                {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              </Button>
+            )}
           </div>
         </div>
 
-        {/* Mobile Navigation */}
-        {mobileMenuOpen && (
-          <div className="md:hidden py-4 border-t">
+        {/* Mobile Navigation (JS-based) */}
+        {!isDesktop && mobileMenuOpen && (
+          <div className="py-4 border-t">
             <nav className="flex flex-col space-y-4">
               <Link href="/#features" className="text-neutral-600 hover:text-trust-blue transition-colors">
                 Features

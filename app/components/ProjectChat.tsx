@@ -14,6 +14,7 @@ import { ProjectData } from '@/contexts/ProjectCreationContext';
 import { mockChats } from '@/components/ChatList';
 import MilestoneForm from './chat/MilestoneForm';
 import PaymentForm from './chat/PaymentForm';
+import { useAccount } from 'wagmi';
 
 interface ProjectChatProps {
   selectedChatId?: string | null;
@@ -28,7 +29,7 @@ export default function ProjectChat({ selectedChatId, onBackToList, isTransition
   const [showProjectInit, setShowProjectInit] = useState(false);
   const [projectInitName, setProjectInitName] = useState('');
   const [showQuickActions, setShowQuickActions] = useState(false);
-
+  const { address: myAddress } = useAccount();
   useEffect(() => {
     if (selectedChatId) {
       const chat = mockChats.find(chat => chat.id === selectedChatId);
@@ -40,9 +41,22 @@ export default function ProjectChat({ selectedChatId, onBackToList, isTransition
     }
   }, [selectedChatId]);
 
+  // Find the selected chat object
+  const selectedChat = mockChats.find(chat => chat.id === selectedChatId);
+  // Determine the peer address for XMTP:
+  // - For DMs, use chat.basename
+  // - For projects, use the first participant (if available)
+  let peerAddress: string | undefined = undefined;
+  if (selectedChat) {
+    if (selectedChat.type === 'dm' && selectedChat.basename) {
+      peerAddress = selectedChat.basename;
+    } else if (selectedChat.type === 'project' && selectedChat.participants && selectedChat.participants.length > 0) {
+      peerAddress = selectedChat.participants.find(p => p !== myAddress) || selectedChat.participants[0];
+    }
+  }
+
   const { messages, isTyping, addMessage, handleAction, handleSlashCommand } = useChatMessages({
-    chatType: 'project',
-    projectName,
+    peerAddress
   });
 
   // Show skeleton during transition or when no chat is selected

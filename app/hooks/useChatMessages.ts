@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useXMTP } from "./useXMTP";
 
 export type MilestoneActionData = {
   milestone: string;
@@ -32,117 +33,43 @@ export type ChatMessage = {
   eventData?: Record<string, unknown>;
 };
 
-export const useChatMessages = (options?: { chatType?: string; projectName?: string }) => {
-  const { chatType, projectName } = options || {};
+export const useChatMessages = (options?: { peerAddress?: string }) => {
+  const { peerAddress } = options || {};
 
-  let initialMessages: ChatMessage[];
-  if (chatType === 'project' || (projectName && projectName === 'Dapps Development')) {
-    initialMessages = [
-      {
-        id: "1",
-        type: "ai",
-        content: `Welcome to the project chat for Dapps Development! Here you can discuss milestones, payments, and share updates with your team.`,
-        timestamp: new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-      },
-      {
-        id: "2",
-        type: "user",
-        sender: "dev.base",
-        content: "Hi team, the smart contract has been deployed.",
-        timestamp: new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-      },
-      {
-        id: "3",
-        type: "ai",
-        content: "Great work! Next, let's review the initial wireframes milestone.",
-        timestamp: new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-      },
-      {
-        id: "4",
-        type: "user",
-        sender: "client.base",
-        content: "Can you share the latest wireframes?",
-        timestamp: new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-      },
-      {
-        id: "5",
-        type: "ai",
-        content: "Uploading the latest wireframes now.",
-        timestamp: new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-      },
-    ];
-  } else {
-    initialMessages = [
-      {
-        id: "1",
-        type: "ai",
-        content:
-          "👋 Hi! I'm your CollabraChain AI Agent. Ask me anything about your projects, milestones, payments, or how to get started. Try commands like /newproject, /milestone, or just say hello!",
-        timestamp: new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-      },
-      {
-        id: "2",
-        type: "user",
-        sender: "you",
-        content: "What can you do?",
-        timestamp: new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-      },
-      {
-        id: "3",
-        type: "ai",
-        content: "I can help you create new projects, track milestones, manage payments, and share files. You can use slash commands or just type your request in natural language!",
-        timestamp: new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-      },
-      {
-        id: "4",
-        type: "user",
-        sender: "you",
-        content: "How do I start a new project?",
-        timestamp: new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-      },
-      {
-        id: "5",
-        type: "ai",
-        content: "Just type /newproject followed by your project name, or tell me what you want to build!",
-        timestamp: new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-      },
-    ];
-  }
+  // XMTP integration
+  const xmtp = useXMTP(peerAddress);
+
+  // If using XMTP, start with empty messages and rely on XMTP for history
+  // Otherwise, also start with empty messages (no mock/AI messages)
+  const initialMessages: ChatMessage[] = [];
 
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
   const [isTyping, setIsTyping] = useState(false);
 
-  const addMessage = (content: string, type: "user" | "ai" = "user") => {
+  // Listen for new XMTP messages
+  useEffect(() => {
+    if (!peerAddress || !xmtp || !xmtp.messages) return;
+    // Map XMTP messages to ChatMessage format
+    const mapped = xmtp.messages.map((msg) => ({
+      id: msg.id,
+      type: msg.senderAddress === xmtp.myAddress ? ("user" as const) : ("ai" as const),
+      sender: msg.senderAddress,
+      content: msg.content,
+      timestamp: msg.sent.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+    }));
+    setMessages((prev) => {
+      // Avoid duplicates
+      const existingIds = new Set(prev.map((m) => m.id));
+      const newMsgs = mapped.filter((m) => !existingIds.has(m.id));
+      return [...prev, ...newMsgs] as ChatMessage[];
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [xmtp?.messages, peerAddress]);
+
+  const addMessage = async (content: string, type: "user" | "ai" = "user") => {
     const newMessage: ChatMessage = {
       id: Date.now().toString(),
       type,
@@ -155,6 +82,28 @@ export const useChatMessages = (options?: { chatType?: string; projectName?: str
     };
 
     setMessages((prev) => [...prev, newMessage]);
+
+    // If using XMTP, send the message
+    if (peerAddress && xmtp && xmtp.sendMessage) {
+      try {
+        await xmtp.sendMessage(content);
+      } catch {
+        // Optionally handle error
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: Date.now().toString() + "-err",
+            type: "ai",
+            content: "Failed to send message via XMTP.",
+            timestamp: new Date().toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+          } as ChatMessage,
+        ]);
+      }
+      return;
+    }
 
     if (type === "user") {
       generateAIResponse(content);
